@@ -1,0 +1,36 @@
+interval: 5        # seconds between snapshots
+ring_buffer: 60    # snapshots kept per process
+
+socket: /var/run/watchdog.sock  # Unix socket for Laravel/Symfony package
+
+watchers:
+  - name: "queue-workers"
+    mask: "queue:work"
+    thresholds:
+      rss_absolute_mb: 500
+      growth_snapshots: 10
+    on_anomaly:
+      kill: true
+      dump_path: /var/log/watchdog/
+      webhook: ""   # optional: https://hooks.slack.com/... (HTTP POST with JSON report)
+      exec: ""      # optional: /usr/local/bin/notify.sh (called with env vars)
+
+  - name: "horizon-workers"
+    mask: "horizon:work"
+    thresholds:
+      rss_absolute_mb: 500
+      growth_snapshots: 10
+      pool_rss_total_mb: 4096     # optional: total RSS limit across all matched processes
+      pool_kill_strategy: "heaviest"  # required if pool_rss_total_mb is set: "heaviest" or "all"
+    on_anomaly:
+      kill: true
+      dump_path: /var/log/watchdog/
+
+  - name: "php-fpm"
+    mask: "php-fpm"
+    thresholds:
+      rss_absolute_mb: 256
+      growth_snapshots: 0   # disable trend detection — fpm memory fluctuates with load
+    on_anomaly:
+      kill: false            # fpm manages its own worker restarts
+      dump_path: /var/log/watchdog/

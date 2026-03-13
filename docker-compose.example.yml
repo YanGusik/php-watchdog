@@ -1,0 +1,43 @@
+# Example: watchdog as a sidecar that monitors all containers on the host.
+#
+# How it works (same approach as cAdvisor, Prometheus node-exporter):
+#   - Mount the HOST's /proc into the watchdog container read-only
+#   - Linux has a single process table — containers are just namespaced views
+#   - Watchdog reads host /proc and sees processes from ALL containers
+#   - No need to couple watchdog to a specific container via pid: "service:..."
+#
+# Socket sharing:
+#   - The Laravel/Symfony module writes to a Unix socket
+#   - Both the app container and watchdog container mount the same volume
+#   - They communicate through the shared socket file
+
+services:
+  app:
+    image: your-app-image
+    # ... your app config
+    volumes:
+      - watchdog-socket:/var/run/watchdog  # shared socket directory
+
+  horizon:
+    image: your-app-image
+    command: php artisan horizon
+    volumes:
+      - watchdog-socket:/var/run/watchdog  # shared socket directory
+
+  watchdog:
+    image: yangusik/php-watchdog:latest
+    volumes:
+      - /proc:/proc:ro                              # host /proc — sees all container processes
+      - ./watchdog.yml:/etc/watchdog/watchdog.yml:ro
+      - watchdog-socket:/var/run/watchdog           # shared socket directory
+      - watchdog-reports:/var/log/watchdog          # reports output
+    restart: unless-stopped
+    # Run as the same user as PHP workers so the Unix socket is writable by them.
+    # Reading /proc is allowed for any user on Linux.
+    # Killing processes requires matching UID — if kill: false, any user works.
+    # Find your PHP worker UID: docker exec <container> id www-data
+    user: "1000:1000"
+
+volumes:
+  watchdog-socket:
+  watchdog-reports:

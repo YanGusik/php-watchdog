@@ -1,0 +1,35 @@
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Claude
+.claude/
+
+# Binaries
+watchdog
+rss-check
+*.exe
+*.out
+
+# Build artifacts
+/dist/
+/bin/
+
+# Config with sensitive data (use watchdog.yml.example as template)
+watchdog.yml
+watchdog.dev.yml
+
+# Go
+vendor/
+*.test
+*.prof
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs and reports
+*.log
+/reports/
+tmp.md
