@@ -7,8 +7,8 @@
 .claude/
 
 # Binaries
-watchdog
-rss-check
+/watchdog
+/rss-check
 *.exe
 *.out
 
