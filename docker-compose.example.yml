@@ -27,7 +27,7 @@ services:
   watchdog:
     image: yangusik/php-watchdog:latest
     volumes:
-      - /proc:/proc:ro                              # host /proc — sees all container processes
+      - /proc:/host/proc:ro                         # host /proc mounted at /host/proc to avoid overwriting container's /proc
       - ./watchdog.yml:/etc/watchdog/watchdog.yml:ro
       - watchdog-socket:/var/run/watchdog           # shared socket directory
       - watchdog-reports:/var/log/watchdog          # reports output

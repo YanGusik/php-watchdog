@@ -24,15 +24,17 @@ type Reader interface {
 }
 
 // FSReader implements Reader using the Linux /proc filesystem.
-type FSReader struct{}
+type FSReader struct {
+	procRoot string // /proc by default, /host/proc in Docker
+}
 
-func New() *FSReader {
-	return &FSReader{}
+func New(procRoot string) *FSReader {
+	return &FSReader{procRoot: procRoot}
 }
 
 // FindByMask scans /proc and returns processes whose cmdline matches the mask.
 func (r *FSReader) FindByMask(mask string) ([]Process, error) {
-	entries, err := filepath.Glob("/proc/*/cmdline")
+	entries, err := filepath.Glob(r.procRoot + "/*/cmdline")
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +64,7 @@ func (r *FSReader) FindByMask(mask string) ([]Process, error) {
 
 // ReadRSS reads VmRSS from /proc/PID/status. Returns value in kilobytes.
 func (r *FSReader) ReadRSS(pid int) (int64, error) {
-	path := fmt.Sprintf("/proc/%d/status", pid)
+	path := fmt.Sprintf("%s/%d/status", r.procRoot, pid)
 
 	f, err := os.Open(path)
 	if err != nil {
@@ -88,7 +90,7 @@ func (r *FSReader) ReadRSS(pid int) (int64, error) {
 
 // IsAlive reports whether the process with the given PID still exists.
 func (r *FSReader) IsAlive(pid int) bool {
-	_, err := os.Stat(fmt.Sprintf("/proc/%d", pid))
+	_, err := os.Stat(fmt.Sprintf("%s/%d", r.procRoot, pid))
 	return err == nil
 }
 
@@ -120,12 +122,13 @@ func matchMask(mask, cmdline string) bool {
 }
 
 func extractPID(path string) (int, error) {
-	// "/proc/1234/cmdline" → ["", "proc", "1234", "cmdline"]
+	// "/proc/1234/cmdline" or "/host/proc/1234/cmdline"
+	// PID is always the second-to-last directory component
 	parts := strings.Split(path, "/")
 	if len(parts) < 3 {
 		return 0, fmt.Errorf("unexpected path: %s", path)
 	}
-	return strconv.Atoi(parts[2])
+	return strconv.Atoi(parts[len(parts)-2])
 }
 
 // readCmdlineFile reads /proc/PID/cmdline replacing null bytes with spaces.

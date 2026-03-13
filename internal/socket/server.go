@@ -65,6 +65,10 @@ func (s *Server) Listen() error {
 	}
 	defer ln.Close()
 
+	if err := os.Chmod(s.path, 0666); err != nil {
+		log.Printf("socket: failed to chmod %s: %v", s.path, err)
+	}
+
 	log.Printf("socket listening on %s", s.path)
 
 	for {
@@ -81,6 +85,7 @@ func (s *Server) handle(conn net.Conn) {
 
 	var ctx ProcessContext
 	if err := json.NewDecoder(conn).Decode(&ctx); err != nil {
+		log.Printf("socket: failed to decode context: %v", err)
 		return
 	}
 

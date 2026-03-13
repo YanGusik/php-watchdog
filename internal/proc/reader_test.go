@@ -10,8 +10,8 @@ import (
 // Аналог в C#: [Test] методы в NUnit/xUnit.
 
 func TestFSReader_ReadRSS_CurrentProcess(t *testing.T) {
-	reader := New()
-	pid := os.Getpid() // PID текущего процесса (самого теста)
+	reader := New("/proc")
+	pid := os.Getpid()
 
 	rss, err := reader.ReadRSS(pid)
 
@@ -26,7 +26,7 @@ func TestFSReader_ReadRSS_CurrentProcess(t *testing.T) {
 }
 
 func TestFSReader_IsAlive_CurrentProcess(t *testing.T) {
-	reader := New()
+	reader := New("/proc")
 	pid := os.Getpid()
 
 	if !reader.IsAlive(pid) {
@@ -35,7 +35,7 @@ func TestFSReader_IsAlive_CurrentProcess(t *testing.T) {
 }
 
 func TestFSReader_IsAlive_NonExistentPID(t *testing.T) {
-	reader := New()
+	reader := New("/proc")
 
 	// PID 999999999 заведомо не существует
 	if reader.IsAlive(999999999) {
@@ -44,7 +44,7 @@ func TestFSReader_IsAlive_NonExistentPID(t *testing.T) {
 }
 
 func TestFSReader_FindByMask_FindsCurrentProcess(t *testing.T) {
-	reader := New()
+	reader := New("/proc")
 
 	// "go" есть в cmdline любого go test процесса
 	processes, err := reader.FindByMask("go")
@@ -92,7 +92,7 @@ func TestMatchMask(t *testing.T) {
 }
 
 func TestFSReader_FindByMask_NoMatchReturnsEmpty(t *testing.T) {
-	reader := New()
+	reader := New("/proc")
 
 	// Маска которая точно не матчит ни один процесс
 	processes, err := reader.FindByMask("__no_such_process_mask_xyz__")

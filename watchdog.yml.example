@@ -1,5 +1,6 @@
 interval: 5        # seconds between snapshots
 ring_buffer: 60    # snapshots kept per process
+proc_root: /proc   # use /host/proc when running in Docker
 
 socket: /var/run/watchdog.sock  # Unix socket for Laravel/Symfony package
 

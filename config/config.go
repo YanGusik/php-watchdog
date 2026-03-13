@@ -10,6 +10,7 @@ type Config struct {
 	Interval   int       `yaml:"interval"`
 	RingBuffer int       `yaml:"ring_buffer"`
 	Socket     string    `yaml:"socket"`
+	ProcRoot   string    `yaml:"proc_root"` // default: /proc, use /host/proc in Docker
 	Watchers   []Watcher `yaml:"watchers"`
 }
 
@@ -44,6 +45,7 @@ func Load(path string) (*Config, error) {
 		Interval:   5,
 		RingBuffer: 60,
 		Socket:     "/var/run/watchdog.sock",
+		ProcRoot:   "/proc",
 	}
 
 	if err := yaml.Unmarshal(data, cfg); err != nil {

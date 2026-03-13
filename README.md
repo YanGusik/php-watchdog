@@ -475,6 +475,8 @@ volumes:
 
 One watchdog instance monitors all containers on the host — no need to couple it to a specific container.
 
+> **Note for WSL2 + Docker Desktop:** Docker containers run inside a separate VM, so the WSL2 host `/proc` does not contain container processes. Use `pid: "service:app"` instead (see Option 2 below).
+
 `watchdog.yml` — point socket to the shared volume:
 
 ```yaml
@@ -539,6 +541,8 @@ This way:
 - The Unix socket is created with the right ownership — PHP workers can write to it
 - Killing workers works because UIDs match
 - No root needed
+
+If watchdog runs as a different user than PHP workers (e.g. root), the Unix socket is automatically created with `0666` permissions so any user can connect to it.
 
 To find the UID of your PHP workers:
 ```bash
