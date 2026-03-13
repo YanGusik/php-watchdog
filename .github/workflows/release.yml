@@ -1,0 +1,31 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Build binaries
+        run: |
+          GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/watchdog-linux-amd64 ./cmd/watchdog/
+          GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o dist/watchdog-linux-arm64 ./cmd/watchdog/
+          GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/rss-check-linux-amd64 ./cmd/rss-check/
+          GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o dist/rss-check-linux-arm64 ./cmd/rss-check/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
